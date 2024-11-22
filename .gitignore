@@ -1,0 +1,8 @@
+
+.env
+/Include
+/Lib
+/Logs
+/Scripts
+/share
+.pyvenv.cfg
