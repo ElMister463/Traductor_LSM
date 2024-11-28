@@ -1,14 +1,14 @@
 import cv2
-from dependencies import mp, np, os, draw_landmarks, mediapipe_detection, extract_keypoints, prepare_data
+from dependencies import mp, np, os, draw_landmarks, mediapipe_detection, extract_keypoints, load_dotenv
 import model_training
 
 # Configurar Mediapipe
 mp_drawing = mp.solutions.drawing_utils
 mp_holistic = mp.solutions.holistic
 
-colors = [(245, 117, 16), (117, 245, 16), (16, 117, 245)]
+colors = [(245, 117, 16), (117, 245, 16), (16, 117, 245), (200, 123, 211)]
 
-DATA_PATH = 'MP_Data'  # Ruta donde están guardados los datos
+DATA_PATH = 'MP_DATA' # Ruta donde están guardados los datos
 
 actions = np.array([folder for folder in os.listdir(DATA_PATH) if os.path.isdir(os.path.join(DATA_PATH, folder))])
 
@@ -26,7 +26,7 @@ model = model_training.load_trained_model()
 sequence = []
 sentence = []
 predictions = []
-threshold = 0.9
+threshold = 0.75
 
 
 #cap = cv2.VideoCapture('http://192.168.137.186:8080/video')

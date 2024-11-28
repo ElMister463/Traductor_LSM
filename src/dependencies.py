@@ -11,6 +11,13 @@ import sklearn
 from draw_landmarks import draw_landmarks 
 from mediapipe_dection import mediapipe_detection
 from extract_keypoints import extract_keypoints
-from model_training import prepare_data
 
 
+import tensorflow as tf
+from tensorflow.keras.models import load_model
+from fastapi import FastAPI 
+from pydantic import BaseModel
+import json
+from typing import List
+
+from dotenv import load_dotenv

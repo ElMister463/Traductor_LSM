@@ -21,6 +21,7 @@ venv\Scripts\activate
 En macOS/Linux:
 source venv/bin/activate
 
+Clonar repositorio
 
 Instala las dependencias necesarias:
 pip install -r requirements.txt
@@ -50,3 +51,13 @@ Mediapipe: Para detección de landmarks de manos y rostros.
 TensorFlow: Para el modelo de IA de reconocimiento de señas.
 Notas adicionales
 Si deseas detener la ejecución en cualquier momento, puedes presionar la tecla "q"
+
+Para convertir el modelo h5 a tflite, ir a IAtoTFLite.py, ahi debes de verificar que el path coincida con la direccion del archivo.
+
+Para el server, necesitas levantar un contenedor de docker para eso, ejecuta estos comandos. En la consola, verifica que estas en la carpeta:
+
+#Esto se creará el contenedor
+docker build -t nombre_contenedor .
+
+#Iniciar contenedor
+docker run -p 8000:8000 nombre_contenedor
