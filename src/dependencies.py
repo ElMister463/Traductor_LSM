@@ -15,9 +15,4 @@ from extract_keypoints import extract_keypoints
 
 import tensorflow as tf
 from tensorflow.keras.models import load_model
-from fastapi import FastAPI 
-from pydantic import BaseModel
-import json
-from typing import List
 
-from dotenv import load_dotenv

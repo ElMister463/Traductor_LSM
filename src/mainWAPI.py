@@ -1,9 +1,10 @@
 import cv2
-from dependencies import mp, np, os, draw_landmarks, mediapipe_detection, extract_keypoints, load_dotenv
+from dependencies import mp, np, os, draw_landmarks, mediapipe_detection, extract_keypoints
 import model_training
 import requests
 import tensorflow as tf
 from collections import deque
+import time  # Importar el módulo time para manejar el tiempo
 
 # Configurar Mediapipe
 mp_drawing = mp.solutions.drawing_utils
@@ -34,6 +35,10 @@ cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
+# Variables para controlar la frecuencia de impresión
+last_print_time = time.time()
+print_interval = 1.0  # Intervalo de tiempo en segundos para imprimir la acción
+
 # Poner el modelo Mediapipe
 with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
     while True:  # Iniciar un bucle para la captura de video
@@ -47,56 +52,53 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
         # Dibujar landmarks
         draw_landmarks(image, results)
 
-        # Predicción
-        keypoints = extract_keypoints(results)
-        sequence.append(keypoints)
-        sequence = sequence[-30:]  # Aumentar a 60 frames
+        # Verificar si se detectan manos
+        if results.left_hand_landmarks or results.right_hand_landmarks:
+            # Predicción
+            keypoints = extract_keypoints(results)
+            sequence.append(keypoints)
+            sequence = sequence[-30:]  # Mantener solo los últimos 30 frames
 
-        if len(sequence) == 30:  # Cambié la condición a 60 frames
-            # Prepara los datos de entrada
-            input_data = np.expand_dims(sequence, axis=0).astype(np.float32)
+            if len(sequence) == 30:  # Cambié la condición a 30 frames
+                # Prepara los datos de entrada
+                input_data = np.expand_dims(sequence, axis=0).astype(np.float32)
 
-            # Establece el tensor de entrada
-            input_details = interpreter.get_input_details()
-            interpreter.set_tensor(input_details[0]['index'], input_data)
+                # Establece el tensor de entrada
+                input_details = interpreter.get_input_details()
+                interpreter.set_tensor(input_details[0]['index'], input_data)
 
-            # Ejecuta la inferencia
-            interpreter.invoke()
+                # Ejecuta la inferencia
+                interpreter.invoke()
 
-            # Obtiene la predicción
-            output_details = interpreter.get_output_details()
-            res = interpreter.get_tensor(output_details[0]['index'])[0]
+                # Obtiene la predicción
+                output_details = interpreter.get_output_details()
+                res = interpreter.get_tensor(output_details[0]['index'])[0]
 
-            smooth_predictions.append(np.argmax(res))
-            most_common_prediction = np.bincount(smooth_predictions).argmax()
-            predicted_action = actions[most_common_prediction]
-            print(predicted_action)
-            predictions.append(most_common_prediction)
+                smooth_predictions.append(np.argmax(res))
+                most_common_prediction = np.bincount(smooth_predictions).argmax()
+                predicted_action = actions[most_common_prediction]
+                predictions.append(most_common_prediction)
 
-            # Enviar la predicción a la API
-            if res[most_common_prediction] > threshold:  # Solo enviar si la confianza es alta
-                response = requests.post('http://127.0.0.1:8000/predict', json={"data": keypoints.tolist()})
-                if response.status_code == 200:
-                    api_response = response.json()
-                    print(f"Respuesta de la API: {api_response}")
+                # Enviar la predicción a la API
+                if res[most_common_prediction] > threshold:  # Solo enviar si la confianza es alta
+                    response = requests.post('http://127.0.0.1:8000/predict', json={"data": keypoints.tolist()})
+                    if response.status_code == 200:
+                        api_response = response.json()
+                        print(f"Respuesta de la API: {api_response}")
 
-        # Lógica de visualización
-        if len(predictions) > 10 and np.unique(predictions[-10:])[0] == most_common_prediction:
-            if len(sentence) > 0 and actions[most_common_prediction] != sentence[-1]:
-                sentence.append(actions[most_common_prediction])
-            elif len(sentence) == 0:
-                sentence.append(actions[most_common_prediction])
+                # Lógica de visualización
+            if len(predictions) > 10 and np.unique(predictions[-10:]).size == 1:
+                if time.time() - last_print_time > print_interval:
+                    print(f"Predicción actual: {actions[np.unique(predictions[-10:])[0]]}")
+                    last_print_time = time.time()
+        else:
+            # Si no se detectan manos, no hacer nada
+            print("No se detectan manos, esperando...")
 
-            if len(sentence) > 5:
-                sentence = sentence[-5:]
+        # Mostrar el frame procesado
+        cv2.imshow('Hand Gesture Recognition', image)
 
-            # Visualizar probabilidades
-            image = prob_viz(res, actions, image, colors)
-            cv2.rectangle(image, (0, 0), (640, 40), (245, 117, 16), -1)
-            cv2.putText(image, ' '.join(sentence), (3, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-
-        cv2.imshow('Traductor LSM', image)
-
+        # Salir del bucle si se presiona la tecla 'q'
         if cv2.waitKey(10) & 0xFF == ord('q'):
             break
 
