@@ -92,7 +92,7 @@ def train_model(model, X_train, y_train):
     """
     log_dir = os.path.join('Logs')
     tb_callback = TensorBoard(log_dir=log_dir)
-    model.fit(X_train, y_train, epochs=1000, callbacks=[tb_callback])
+    model.fit(X_train, y_train, epochs=300, callbacks=[tb_callback])
     return model
 
 # Función para guardar el modelo

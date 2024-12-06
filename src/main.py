@@ -1,5 +1,5 @@
 import cv2
-from dependencies import mp, np, os, draw_landmarks, mediapipe_detection, extract_keypoints, load_dotenv
+from dependencies import mp, np, os, draw_landmarks, mediapipe_detection, extract_keypoints
 import model_training
 
 # Configurar Mediapipe
@@ -20,8 +20,8 @@ def prob_viz(res, actions, input_frame, colors):
         cv2.putText(output_frame, actions[num], (0, 85 + num * 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
     return output_frame
 
-# Cargar el modelo entrenado
-model = model_training.load_trained_model()
+# Cargar el modelo TFLite
+interpreter = model_training.load_trained_model(model_path='model.tflite')
 
 sequence = []
 sentence = []
@@ -54,10 +54,15 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
         sequence.append(keypoints)
         sequence = sequence[-30:]
 
-        if len(sequence) == 30:  # Cambié la condición a 30 frames
-            res = model.predict(np.expand_dims(sequence, axis=0))[0]
-            print(actions[np.argmax(res)])
-            predictions.append(np.argmax(res))
+        if len(sequence) == 30:
+                input_data = np.expand_dims(sequence, axis=0).astype(np.float32)
+                input_details = interpreter.get_input_details()
+                interpreter.set_tensor(input_details[0]['index'], input_data)
+                interpreter.invoke()
+                output_details = interpreter.get_output_details()
+                res = interpreter.get_tensor(output_details[0]['index'])[0]
+
+                
 
         # Lógica de visualización
         if len(predictions) > 10 and np.unique(predictions[-10:])[0] == np.argmax(res):

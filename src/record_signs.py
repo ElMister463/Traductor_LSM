@@ -11,12 +11,12 @@ mp_holistic = mp.solutions.holistic
 DATA_PATH = os.path.join('MP_Data')
 
 # Señas o Acciones que se van a detectar
-actions = np.array(['hola', 'gracias', 'de_nada'])
+actions = np.array(['adios'])
 
 # Treinta videos por data
 no_sequences = 30
 
-# Videos que serán de 30 frames
+# Videos que serán de 60 frames
 sequence_length = 30
 
 # Generar carpetas por cada seña
