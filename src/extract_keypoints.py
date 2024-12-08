@@ -5,7 +5,9 @@ from dependencies import  mp, np
 mp_drawing = mp.solutions.drawing_utils
 mp_holistic = mp.solutions.holistic
 
+
 def extract_keypoints( results ):
+
     pose = np.array ([[res.x, res.y, res.z, res.visibility ] 
         for res in results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros( 33*4 )
     
@@ -21,3 +23,4 @@ def extract_keypoints( results ):
     return np.concatenate( [ pose, face, lh, rh ] )
 
     print(extract_keypoints( results ).shape)
+

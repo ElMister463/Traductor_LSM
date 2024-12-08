@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+pydantic
+tensorflow==2.18.0
+# Otras dependencias que necesitesLabn 
